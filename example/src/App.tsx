@@ -14,13 +14,9 @@ import Shortcuts, { ShortcutItem } from 'react-native-actions-shortcuts';
 export default function App() {
   const [initialShortcut, setInitialShortcut] = useState<ShortcutItem | null>();
 
-  const [lastPressedShortcut, setLastPressedShortcut] = useState<
-    ShortcutItem | undefined
-  >();
+  const [lastPressedShortcut, setLastPressedShortcut] = useState<ShortcutItem>(null);
 
-  const [shortcutItems, setShortcutItems] = useState<
-    ShortcutItem[] | undefined
-  >();
+  const [shortcutItems, setShortcutItems] = useState<ShortcutItem[]>([]);
 
   const ShortcutsEmitter = new NativeEventEmitter(Shortcuts);
 
@@ -47,7 +43,7 @@ export default function App() {
   const setShortcuts = useCallback(async () => {
     const shortcuts = await Shortcuts.setShortcuts([
       {
-        type: 'song',
+        id: 'song',
         title:
           Platform.OS === 'android' ? 'Play "Imagine by John Lennon"' : 'Play',
         shortTitle: 'Play "Imagine"',
@@ -79,7 +75,7 @@ export default function App() {
         <React.Fragment>
           <Text style={styles.caption}>Initial shortcut item: </Text>
           <Text style={styles.info}>
-            {initialShortcut?.type} : {initialShortcut?.title},{' '}
+            {initialShortcut?.id} : {initialShortcut?.title},{' '}
             {initialShortcut.data?.id}
           </Text>
         </React.Fragment>
@@ -89,7 +85,7 @@ export default function App() {
         <React.Fragment>
           <Text style={styles.caption}>Last pressed shortcut item: </Text>
           <Text style={styles.info}>
-            {lastPressedShortcut?.type}: {lastPressedShortcut?.title} ,{' '}
+            {lastPressedShortcut?.id}: {lastPressedShortcut?.title} ,{' '}
             {lastPressedShortcut.data?.id}
           </Text>
         </React.Fragment>
@@ -103,7 +99,7 @@ export default function App() {
           keyExtractor={(_, index) => `${index}`}
           renderItem={({ item }) => (
             <Text style={styles.info}>
-              {item.type} : {item.title}
+              {item.id} : {item.title}
             </Text>
           )}
         />
