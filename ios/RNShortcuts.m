@@ -14,6 +14,12 @@ RCT_EXTERN_METHOD(
     reject:(RCTPromiseRejectBlock)
 )
 
+RCT_EXTERN_METHOD(
+    addShortcut:(NSDictionary *)shortcutItem
+    resolve:(RCTPromiseResolveBlock)resolve
+    reject:(RCTPromiseRejectBlock)
+)
+
 RCT_EXTERN_METHOD(clearShortcuts)
 
 RCT_EXTERN_METHOD(

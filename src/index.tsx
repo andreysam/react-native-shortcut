@@ -4,7 +4,7 @@ export interface ShortcutItem {
   /**
    * Unique string used to identify the type of the action
    */
-  type: string;
+  id: string;
 
   /**
    * On Android - it's recommended to keep this under 25 characters. If there
@@ -29,6 +29,21 @@ export interface ShortcutItem {
   iconName?: string;
 
   /**
+   * [Android] The name of the person
+   */
+  personName?: string;
+
+  /**
+   * [Android] The url to image for person
+   */
+  personIcon?: string;
+
+  /**
+   * [Android] Is long-lived
+   */
+  longLived?: boolean;
+
+  /**
    * Custom payload for the action
    */
   data?: any;
@@ -40,6 +55,12 @@ interface ShortcutsType extends EventSubscriptionVendor {
    * @returns a promise with the items that were set
    */
   setShortcuts(items: ShortcutItem[]): Promise<ShortcutItem[]>;
+
+  /**
+   * Add the shortcut item.
+   * @returns a promise with boolean
+   */
+  addShortcut(shortcutItem: ShortcutItem): Promise<boolean>;
 
   /**
    * @returns a promise with the items that were set

@@ -89,7 +89,7 @@ fileprivate extension UIApplicationShortcutItem {
 
     static func from(_ value: [String: Any]) throws -> UIApplicationShortcutItem? {
         guard
-            let type = value["type"] as? String,
+            let type = (value["id"] ?? value["type"]) as? String,
             let title = value["title"] as? String
             else {
                 throw ShortcutsError.invalidShortcutItem

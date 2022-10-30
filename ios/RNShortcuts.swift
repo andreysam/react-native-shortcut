@@ -20,6 +20,23 @@ public class RNShortcuts: RCTEventEmitter {
     public override class func requiresMainQueueSetup() -> Bool {
         return true
     }
+    
+    @objc(addShortcut:resolve:reject:)
+    public func addShortcut(shortcutItem: [String: Any],
+                            resolve: @escaping RCTPromiseResolveBlock,
+                            reject: @escaping RCTPromiseRejectBlock) {
+        Shortcuts.shared.getShortcuts { (shorcutItems) in
+            var existing = shorcutItems ?? [];
+            existing.insert(shortcutItem, at: 0);
+            do {
+                let shortcutItems = try Shortcuts.shared.setShortcuts(existing)
+                resolve(shortcutItems)
+            } catch {
+                let error = NSError(domain: "RNShortcuts", code: 1)
+                reject("1", "Unable to set shortcuts", error)
+            }
+        }
+    }
 
     @objc(setShortcuts:resolve:reject:)
     public func setShortcuts(shortcutItems: [[String: Any]],

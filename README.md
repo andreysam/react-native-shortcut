@@ -88,7 +88,7 @@ To set shortcuts (will replace existing dynamic actions / shortcuts)
 
 ```js
 const shortcutItem = {
-    type: "my.awesome.action",
+    id: "my.awesome.action",
     title: "Do awesome things",
     shortTitle: "Do it",
     subtitle: "iOS only",

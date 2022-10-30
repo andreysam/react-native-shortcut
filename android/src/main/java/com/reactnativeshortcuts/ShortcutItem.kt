@@ -2,21 +2,26 @@ package com.reactnativeactionsshortcuts
 
 import android.annotation.TargetApi
 import android.os.PersistableBundle
+import android.util.Log
 import com.facebook.react.bridge.*
 import org.json.JSONArray
 import org.json.JSONObject
 
 data class ShortcutItem(
-        val type: String,
+        val id: String,
         val title: String,
         val shortTitle: String,
         val iconName: String?,
-        val data: JSONObject?) {
+        val data: JSONObject?,
+        val personName: String?,
+        val personIcon: String?,
+        val longLived: Boolean
+) {
 
     @TargetApi(25)
     fun toBundle(): PersistableBundle {
         val bundle = PersistableBundle()
-        bundle.putString(KeyName.type, type)
+        bundle.putString(KeyName.id, id)
         bundle.putString(KeyName.title, title)
         bundle.putString(KeyName.shortTitle, shortTitle)
         if(iconName != null) {
@@ -30,7 +35,7 @@ data class ShortcutItem(
 
     fun toMap(): WritableMap {
         val map = Arguments.createMap()
-        map.putString(KeyName.type, type)
+        map.putString(KeyName.id, id)
         map.putString(KeyName.title, title)
         map.putString(KeyName.shortTitle, shortTitle)
         if(iconName != null) {
@@ -45,34 +50,43 @@ data class ShortcutItem(
     companion object {
 
         object KeyName {
-            const val type = "type"
+            const val id = "id"
             const val title = "title"
             const val shortTitle = "shortTitle"
             const val iconName = "iconName"
             const val data = "data"
+            const val personName = "personName"
+            const val personIcon = "personIcon"
+            const val longLived = "longLived"
         }
 
         fun fromReadableMap(map: ReadableMap): ShortcutItem? {
-            val type = map.getString(KeyName.type) ?: return null
+            val id = map.getString(KeyName.id) ?: return null
             val title = map.getString(KeyName.title) ?: return null
-            val shortTitle = if (map.hasKey(KeyName.shortTitle)) map.getString(KeyName.shortTitle) else null
+            val shortTitle = if (map.hasKey(KeyName.shortTitle)) map.getString(KeyName.shortTitle) else title
             val iconName = if (map.hasKey(KeyName.iconName)) map.getString(KeyName.iconName) else null
+            val personName = if (map.hasKey(KeyName.personName)) map.getString(KeyName.personName) else null
+            val personIcon = if (map.hasKey(KeyName.personIcon)) map.getString(KeyName.personIcon) else null
+            val longLived = if (map.hasKey(KeyName.longLived)) map.getBoolean(KeyName.longLived) else false
             val data = if (map.hasKey(KeyName.data)) map.getMap(KeyName.data) else null
             val jsonObject = if (data != null) Helper.toJsonObject(data) else null
 
-            return ShortcutItem(type, title, shortTitle ?: title, iconName, jsonObject)
+            return ShortcutItem(id, title, shortTitle ?: title, iconName, jsonObject, personName, personIcon, longLived)
         }
 
         @TargetApi(25)
         fun fromPersistentBundle(bundle: PersistableBundle): ShortcutItem? {
-            val type = bundle.getString(KeyName.type) ?: return null
+            val type = bundle.getString(KeyName.id) ?: return null
             val title = bundle.getString(KeyName.title) ?: return null
+            val personName = bundle.getString(KeyName.personName) ?: return null
+            val personIcon = bundle.getString(KeyName.personIcon) ?: return null
+            val longLived = bundle.getBoolean(KeyName.longLived)
             val shortTitle = bundle.getString(KeyName.shortTitle)
             val iconName = bundle.getString(KeyName.iconName)
             val jsonString = bundle.getString(KeyName.data)
             val jsonObject = JSONObject(jsonString)
 
-            return ShortcutItem(type, title, shortTitle ?: title, iconName, jsonObject)
+            return ShortcutItem(type, title, shortTitle ?: title, iconName, jsonObject, personName, personIcon, longLived)
         }
 
         fun toWritableArray(items: List<ShortcutItem>): WritableArray {

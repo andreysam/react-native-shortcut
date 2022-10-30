@@ -2,21 +2,30 @@ package com.reactnativeactionsshortcuts
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.app.Person
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.PersistableBundle
+import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.google.android.gms.tasks.Tasks
+import com.reactnativeshortcuts.ContextHolder
+import com.reactnativeshortcuts.ResourceUtils
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @ReactModule(name = ShortcutsModule.MODULE_NAME)
 class ShortcutsModule(reactContext: ReactApplicationContext) :
-        ReactContextBaseJavaModule(reactContext),
-        ActivityEventListener {
+    ReactContextBaseJavaModule(reactContext),
+    ActivityEventListener {
 
+    private val TAG = "ShortcutsModule"
 
     companion object {
         const val MODULE_NAME = "RNShortcuts"
@@ -26,6 +35,7 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
 
     init {
         reactContext.addActivityEventListener(this)
+        ContextHolder.setApplicationContext(reactContext);
     }
 
     override fun onCatalystInstanceDestroy() {
@@ -43,6 +53,84 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
 
     override fun getName(): String {
         return MODULE_NAME
+    }
+
+    @ReactMethod
+    @TargetApi(30)
+    fun addShortcut(shortcutItem: ReadableMap, promise: Promise) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            promise.reject(NotSupportedException);
+            return;
+        }
+
+        val context = reactApplicationContext ?: return
+        val activity = currentActivity ?: return
+
+        val shortcutItem = ShortcutItem.fromReadableMap(shortcutItem)
+
+        if (shortcutItem == null) {
+            promise.reject("wrong shortcutItem");
+            return;
+        }
+
+        val intent = Intent(reactApplicationContext, activity::class.java)
+        intent.action = INTENT_ACTION_SHORTCUT
+        intent.putExtra("shortcutItem", shortcutItem.toBundle())
+
+        val (id, title, shortTitle, iconName, data, personName, personIcon, longLived) = shortcutItem;
+
+        val builder = ShortcutInfo
+            .Builder(reactApplicationContext, id)
+            .setLongLabel(title)
+            .setShortLabel(shortTitle)
+            .setIntent(intent)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (personName != null) {
+                val personBuilder = Person.Builder();
+                personBuilder.setBot(false);
+                personBuilder.setName(personName);
+                builder.setLongLabel(personName);
+                builder.setPerson(personBuilder.build());
+
+                if (personIcon != null) {
+                    var largeIconBitmap: Bitmap? = null
+                    try {
+                        largeIconBitmap = Tasks.await<Bitmap>(
+                            ResourceUtils.getImageBitmapFromUrl(
+                                personIcon
+                            ), 10, TimeUnit.SECONDS
+                        )
+                    } catch (e: TimeoutException) {
+                        Log.e(TAG, "Timeout occurred whilst trying to retrieve a largeIcon image: $personIcon", e);
+                    } catch (e: Exception) {
+                        Log.e(TAG, "An error occurred whilst trying to retrieve a largeIcon image: $personIcon", e);
+                    }
+                    if (largeIconBitmap != null) {
+                        Log.d(TAG, "Successfully created bitmap")
+                        var icon = Icon.createWithBitmap(largeIconBitmap)
+                        personBuilder.setIcon(icon);
+                        builder.setIcon(icon);
+                    }
+                }
+            }
+
+            if (longLived) {
+                builder.setLongLived(longLived);
+            }
+        }
+
+        if (iconName != null) {
+            val resourceId = context.resources.getIdentifier(iconName, "drawable", context.packageName)
+            builder.setIcon(Icon.createWithResource(context, resourceId))
+        }
+
+        var shortcutInfo = builder.build();
+
+        val shortcutManager = activity.getSystemService<ShortcutManager>(ShortcutManager::class.java)
+        shortcutManager?.pushDynamicShortcut(shortcutInfo);
+
+        promise.resolve("success")
     }
 
     @ReactMethod
@@ -68,12 +156,12 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
             val (type, title, shortTitle, iconName) = it
 
             val builder = ShortcutInfo
-                    .Builder(reactApplicationContext, type)
-                    .setLongLabel(title)
-                    .setShortLabel(shortTitle)
-                    .setIntent(intent)
+                .Builder(reactApplicationContext, type)
+                .setLongLabel(title)
+                .setShortLabel(shortTitle)
+                .setIntent(intent)
 
-            if(iconName != null) {
+            if (iconName != null) {
                 val resourceId = context.resources.getIdentifier(iconName, "drawable", context.packageName)
                 builder.setIcon(Icon.createWithResource(context, resourceId))
             }
@@ -96,7 +184,7 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
 
         val shortcutManager = currentActivity?.getSystemService<ShortcutManager>(ShortcutManager::class.java)
         val shortcutItems = shortcutManager?.dynamicShortcuts?.map {
-            ShortcutItem(it.id, it.longLabel.toString(), it.shortLabel.toString(), null, null)
+            ShortcutItem(it.id, it.longLabel.toString(), it.shortLabel.toString(), null, null, null, null, false)
         }
 
         promise.resolve(ShortcutItem.toWritableArray(shortcutItems ?: arrayListOf()))
@@ -138,8 +226,8 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
         val shortcutItem = getShortcutItemFromIntent(intent) ?: return
 
         reactApplicationContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit(EVENT_ON_SHORTCUT_ITEM_PRESSED, shortcutItem.toMap())
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit(EVENT_ON_SHORTCUT_ITEM_PRESSED, shortcutItem.toMap())
     }
 
     fun isSupported(): Boolean {
