@@ -14,9 +14,13 @@ import Shortcuts, { ShortcutItem } from 'react-native-actions-shortcuts';
 export default function App() {
   const [initialShortcut, setInitialShortcut] = useState<ShortcutItem | null>();
 
-  const [lastPressedShortcut, setLastPressedShortcut] = useState<ShortcutItem>(null);
+  const [lastPressedShortcut, setLastPressedShortcut] = useState<
+    ShortcutItem | undefined
+  >();
 
-  const [shortcutItems, setShortcutItems] = useState<ShortcutItem[]>([]);
+  const [shortcutItems, setShortcutItems] = useState<
+    ShortcutItem[] | undefined
+  >();
 
   const ShortcutsEmitter = new NativeEventEmitter(Shortcuts);
 
