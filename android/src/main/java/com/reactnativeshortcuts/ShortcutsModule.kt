@@ -108,6 +108,10 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
                     }
                     if (largeIconBitmap != null) {
                         Log.d(TAG, "Successfully created bitmap")
+
+                        // square icons break notifications, but working in shortcut 🤷‍♂️
+                        largeIconBitmap = ResourceUtils.getCircularBitmap(largeIconBitmap);
+
                         var icon = Icon.createWithBitmap(largeIconBitmap)
                         personBuilder.setIcon(icon);
                         builder.setIcon(icon);
