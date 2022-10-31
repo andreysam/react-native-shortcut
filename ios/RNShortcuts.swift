@@ -28,6 +28,18 @@ public class RNShortcuts: RCTEventEmitter {
         Shortcuts.shared.getShortcuts { (shorcutItems) in
             var existing = shorcutItems ?? [];
             existing.insert(shortcutItem, at: 0);
+            
+            var buffer = Array<ShortcutItem>()
+            var added = Set<String>()
+            for elem in existing {
+                if !added.contains((elem["id"] ?? elem["type"]) as! String) {
+                    buffer.append(elem)
+                    added.insert((elem["id"] ?? elem["type"]) as! String)
+                }
+            }
+            
+            existing = buffer
+            
             do {
                 let shortcutItems = try Shortcuts.shared.setShortcuts(existing)
                 resolve(shortcutItems)
