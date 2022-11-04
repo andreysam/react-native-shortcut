@@ -3,6 +3,7 @@ package com.reactnativeactionsshortcuts
 import android.annotation.TargetApi
 import android.app.Activity
 import android.app.Person
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
@@ -16,6 +17,7 @@ import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.google.android.gms.tasks.Tasks
 import com.reactnativeshortcuts.ContextHolder
+import com.reactnativeshortcuts.IntentUtils
 import com.reactnativeshortcuts.ResourceUtils
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -63,8 +65,13 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
             return;
         }
 
-        val context = reactApplicationContext ?: return
-        val activity = currentActivity ?: return
+        val context = reactApplicationContext
+        val activity = currentActivity
+
+        if (context == null) {
+          promise.reject("no context for shortcutItem");
+          return;
+        }
 
         val shortcutItem = ShortcutItem.fromReadableMap(shortcutItem)
 
@@ -73,7 +80,19 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
             return;
         }
 
-        val intent = Intent(reactApplicationContext, activity::class.java)
+        val intent: Intent?
+
+        if (activity == null) {
+          intent = createLaunchActivityIntent(context)
+        } else {
+          intent = Intent(context, activity::class.java)
+        }
+
+        if (intent == null) {
+          promise.reject("no intent for shortcutItem");
+          return;
+        }
+
         intent.action = INTENT_ACTION_SHORTCUT
         intent.putExtra("shortcutItem", shortcutItem.toBundle())
 
@@ -131,7 +150,7 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
 
         var shortcutInfo = builder.build();
 
-        val shortcutManager = activity.getSystemService<ShortcutManager>(ShortcutManager::class.java)
+        val shortcutManager = context.getSystemService<ShortcutManager>(ShortcutManager::class.java)
         shortcutManager?.pushDynamicShortcut(shortcutInfo);
 
         promise.resolve("success")
@@ -237,6 +256,33 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
     fun isSupported(): Boolean {
         return Build.VERSION.SDK_INT >= 25
     }
+
+  fun createLaunchActivityIntent(
+    context: Context
+  ): Intent? {
+    try {
+      var launchActivityIntent =
+        context.packageManager.getLaunchIntentForPackage(context.packageName)
+      var launchActivity: String? = null
+
+      if (launchActivityIntent == null && launchActivity != null) {
+        val launchActivityClass: Class<*> =
+          IntentUtils.getLaunchActivity(launchActivity)
+        launchActivityIntent = Intent(context, launchActivityClass)
+        launchActivityIntent.setPackage(null)
+        launchActivityIntent.flags =
+          Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+      }
+      return launchActivityIntent
+    } catch (e: java.lang.Exception) {
+      Log.e(
+        TAG,
+        "Failed to create LaunchActivityIntent",
+        e
+      )
+    }
+    return null
+  }
 }
 
 object NotSupportedException: Throwable("Feature not supported, requires version 25 or above")
