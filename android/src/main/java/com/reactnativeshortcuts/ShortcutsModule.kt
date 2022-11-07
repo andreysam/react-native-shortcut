@@ -61,7 +61,7 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
     @TargetApi(30)
     fun addShortcut(shortcutItem: ReadableMap, promise: Promise) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            promise.reject(NotSupportedException);
+            promise.resolve("not supported");
             return;
         }
 
