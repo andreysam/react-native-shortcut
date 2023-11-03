@@ -1,4 +1,4 @@
-package com.reactnativeactionsshortcuts
+package com.reactnativeshortcuts
 
 import android.annotation.TargetApi
 import android.app.Activity
@@ -16,9 +16,6 @@ import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.google.android.gms.tasks.Tasks
-import com.reactnativeshortcuts.ContextHolder
-import com.reactnativeshortcuts.IntentUtils
-import com.reactnativeshortcuts.ResourceUtils
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -27,11 +24,11 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext),
     ActivityEventListener {
 
-    private val TAG = "ShortcutsModule"
+    private val TAG = "shortcutsModule"
 
     companion object {
         const val MODULE_NAME = "RNShortcuts"
-        const val INTENT_ACTION_SHORTCUT = "com.react_native_shortcuts.action.SHORTCUT"
+        const val INTENT_ACTION_SHORTCUT = "com.reactnativeshortcuts.shortcutsModule"
         const val EVENT_ON_SHORTCUT_ITEM_PRESSED = "onShortcutItemPressed"
     }
 

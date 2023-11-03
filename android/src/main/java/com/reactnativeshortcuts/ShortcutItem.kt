@@ -1,4 +1,4 @@
-package com.reactnativeactionsshortcuts
+package com.reactnativeshortcuts
 
 import android.annotation.TargetApi
 import android.os.PersistableBundle
@@ -78,13 +78,17 @@ data class ShortcutItem(
         fun fromPersistentBundle(bundle: PersistableBundle): ShortcutItem? {
             val type = bundle.getString(KeyName.id) ?: return null
             val title = bundle.getString(KeyName.title) ?: return null
-            val personName = bundle.getString(KeyName.personName) ?: return null
-            val personIcon = bundle.getString(KeyName.personIcon) ?: return null
+            val personName = bundle.getString(KeyName.personName)
+            val personIcon = bundle.getString(KeyName.personIcon)
             val longLived = bundle.getBoolean(KeyName.longLived)
             val shortTitle = bundle.getString(KeyName.shortTitle)
             val iconName = bundle.getString(KeyName.iconName)
             val jsonString = bundle.getString(KeyName.data)
-            val jsonObject = JSONObject(jsonString)
+            var jsonObject: JSONObject? = null;
+
+            if (jsonString !== null) {
+              jsonObject = JSONObject(jsonString);
+            }
 
             return ShortcutItem(type, title, shortTitle ?: title, iconName, jsonObject, personName, personIcon, longLived)
         }

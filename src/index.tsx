@@ -1,4 +1,4 @@
-import { NativeModules, EventSubscriptionVendor } from 'react-native';
+import { NativeModules, EmitterSubscription, NativeEventEmitter } from 'react-native';
 
 export interface ShortcutItem {
   /**
@@ -49,35 +49,54 @@ export interface ShortcutItem {
   data?: any;
 }
 
-interface ShortcutsType extends EventSubscriptionVendor {
+const { RNShortcuts } = NativeModules;
+
+const ShortcutsEmitter = new NativeEventEmitter(RNShortcuts);
+
+class Shortcuts {
   /**
    * Set the shortcut items.
    * @returns a promise with the items that were set
    */
-  setShortcuts(items: ShortcutItem[]): Promise<ShortcutItem[]>;
+  setShortcuts(items: ShortcutItem[]): Promise<ShortcutItem[]> {
+    return RNShortcuts.setShortcuts(items);
+  }
 
   /**
    * Add the shortcut item.
    * @returns a promise with boolean
    */
-  addShortcut(shortcutItem: ShortcutItem): Promise<boolean>;
+  addShortcut(shortcutItem: ShortcutItem): Promise<boolean> {
+    return RNShortcuts.addShortcut(shortcutItem);
+  }
 
   /**
    * @returns a promise with the items that were set
    */
-  getShortcuts(): Promise<ShortcutItem[]>;
+  getShortcuts(): Promise<ShortcutItem[]> {
+    return RNShortcuts.getShortcuts();
+  }
 
   /**
    * Removes all the shortcut items
    */
-  clearShortcuts(): void;
+  clearShortcuts(): void {
+    return RNShortcuts.clearShortcuts();
+  }
 
   /**
    * Gets the initial shortcut the app was launched with
    */
-  getInitialShortcut(): Promise<ShortcutItem | null>;
+  getInitialShortcut(): Promise<ShortcutItem | null> {
+    return RNShortcuts.getInitialShortcut();
+  }
+
+  /**
+   * Listens for new shortcut events
+   */
+  onShortcutPressed(listener: (shortcut: ShortcutItem) => void): EmitterSubscription {
+    return ShortcutsEmitter.addListener('onShortcutItemPressed', listener);
+  }
 }
 
-const { RNShortcuts } = NativeModules;
-
-export default RNShortcuts as ShortcutsType;
+export default new Shortcuts();
