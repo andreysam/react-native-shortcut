@@ -254,32 +254,38 @@ class ShortcutsModule(reactContext: ReactApplicationContext) :
         return Build.VERSION.SDK_INT >= 25
     }
 
-  fun createLaunchActivityIntent(
-    context: Context
-  ): Intent? {
-    try {
-      var launchActivityIntent =
-        context.packageManager.getLaunchIntentForPackage(context.packageName)
-      var launchActivity: String? = null
+    @ReactMethod
+    fun addListener(eventName: String?) {}
 
-      if (launchActivityIntent == null && launchActivity != null) {
-        val launchActivityClass: Class<*> =
-          IntentUtils.getLaunchActivity(launchActivity)
-        launchActivityIntent = Intent(context, launchActivityClass)
-        launchActivityIntent.setPackage(null)
-        launchActivityIntent.flags =
-          Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-      }
-      return launchActivityIntent
-    } catch (e: java.lang.Exception) {
-      Log.e(
-        TAG,
-        "Failed to create LaunchActivityIntent",
-        e
-      )
+    @ReactMethod
+    fun removeListeners(count: Int?) {}
+
+    fun createLaunchActivityIntent(
+        context: Context
+    ): Intent? {
+        try {
+            var launchActivityIntent =
+                context.packageManager.getLaunchIntentForPackage(context.packageName)
+            var launchActivity: String? = null
+
+            if (launchActivityIntent == null && launchActivity != null) {
+                val launchActivityClass: Class<*> =
+                    IntentUtils.getLaunchActivity(launchActivity)
+                launchActivityIntent = Intent(context, launchActivityClass)
+                launchActivityIntent.setPackage(null)
+                launchActivityIntent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+            }
+            return launchActivityIntent
+        } catch (e: java.lang.Exception) {
+            Log.e(
+                TAG,
+                "Failed to create LaunchActivityIntent",
+                e
+            )
+        }
+        return null
     }
-    return null
-  }
 }
 
 object NotSupportedException: Throwable("Feature not supported, requires version 25 or above")
